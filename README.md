@@ -3,11 +3,31 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: *Student should provide answer here*
+A: Constraint propagation is the repeated application of task specific rules 
+until a solution is found or no further progress can be made.
+
+In case of the "naked twins" it means that 2 boxes from a set of peers have the 
+same two solutions available. While it is unclear which digit goes into which box,
+we know that no other (peer) boxes can obtain either of those two numbers.
+
+The programmed solution looks first for pairs of boxes with the same two 
+potential digits, then checks for units they both appear in and eliminate the locked
+numbers from all peers.
+
+An advanced explanation can be found [here](http://www.sudokuwiki.org/naked_candidates).
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
-A: *Student should provide answer here*
+A: In diagonal sudokus, the same rules that apply for rows, columns and squares, 
+also applies to diagonals. This means the middle "X" can also contain numbers 
+one through nine only once per line.
+
+Due to the solution architecture, adding the diagonal peers to the general set 
+of peers sufficiently satisfies the constraint.
+An additional condition for the "naked twins" was implemented as well.
+
+Attention: variable `DIAGONAL` has to be `True` to solve diagonal Sudokus and 
+should be set to `False` if the Sudoku to solve is not diagonal in nature. 
 
 ### Install
 
