@@ -8,7 +8,6 @@ def cross(a, b):
     """Cross product of elements in A and elements in B."""
     return [s + t for s in a for t in b]
 
-
 rows = 'ABCDEFGHI'
 cols = '123456789'
 boxes = cross(rows, cols)
@@ -18,6 +17,7 @@ column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
 diagonal_units = [["A1", "B2", "C3", "D4", "E5", "F6", "G7", "H8", "I9"],
                   ["A9", "B8", "C7", "D6", "E5", "F4", "G3", "H2", "I1"]]
+
 
 unitlist = row_units + column_units + square_units
 
@@ -56,50 +56,21 @@ def naked_twins(values):
     # Find all instances of naked twins
     dual_boxes = [box for box in values.keys() if len(values[box]) == 2]
     for dual_box in dual_boxes:
-        dual_boxes.remove(dual_box)
-        second_dual_boxes = [second_box for second_box in dual_boxes if values[dual_box] == values[second_box]]
+        second_dual_boxes = [second_box for second_box in dual_boxes
+                             if dual_box != second_box and values[dual_box] == values[second_box]]
 
         for second_dual_box in second_dual_boxes:
-            boxes_to_clean = [peer_set for peer_set in unitlist if dual_box in peer_set and second_dual_box in peer_set]
-            for set in boxes_to_clean:
-                set.remove(dual_box)
-                set.remove(second_dual_box)
-                for box in set:
-                    for digit in values[dual_box]:
-                        assign_value(values, box, values[box].replace(digit, ''))
-
-        """for second_dual_box in second_dual_boxes:
-            boxes_to_clean = []
-
-            # find naked twins in rows
-            if dual_box[0] == second_dual_box[0]:
-                boxes_to_clean = [box for box in values.keys()
-                                  if box[0] == dual_box[0] and not (box == second_dual_box or box == dual_box)]
-
-            # find naked twins in columns
-            if dual_box[1] == second_dual_box[1]:
-                boxes_to_clean = boxes_to_clean + [box for box in values.keys()
-                                                   if box[1] == dual_box[1]
-                                                   and not (box == second_dual_box or box == dual_box)]
-
-            # find naked twins in squares
-            for integer in range(len(square_units)):
-                if dual_box in square_units[integer] and second_dual_box in square_units[integer]:
-                    boxes_to_clean = boxes_to_clean + [box for box in square_units[integer]
-                                                       if not (box == second_dual_box or box == dual_box)]
-
-            # find naked twins in diagonals if needed
-            if DIAGONAL:
-                for integer in range(len(diagonal_units)):
-                    if dual_box in diagonal_units[integer] and second_dual_box in diagonal_units[integer]:
-                        boxes_to_clean = boxes_to_clean + [box for box in diagonal_units[integer]
-                                                           if not (box == second_dual_box or box == dual_box)]
-
-            # delete naked twin values from all peers
-            for box in boxes_to_clean:
-                assign_value(values, box, values[box].replace(values[dual_box][1], ''))
-                assign_value(values, box, values[box].replace(values[dual_box][0], ''))"""
-
+            boxes_to_clean = [peer_set for peer_set in unitlist
+                              if (dual_box in peer_set and second_dual_box in peer_set)]
+            print(dual_box, second_dual_box, boxes_to_clean)
+            for group in boxes_to_clean:
+                group.remove(dual_box)
+                group.remove(second_dual_box)
+                for box in group:
+                    if len(values[box]) >= 1:  # weed out boxes with empty values
+                        for digit in values[dual_box]:
+                            assign_value(values, box, values[box].replace(digit, ''))
+    print(unitlist)
     return values
 
 
@@ -133,8 +104,7 @@ def display(values):
         values(dict): The sudoku in dictionary form
     """
 
-    if values is False or None:
-        print("unable to solve")
+    if values is False:
         return
     width = 1+max(len(values[s]) for s in boxes)
     line = '+'.join(['-'*(width*3)]*3)
@@ -225,10 +195,8 @@ def search(values):
         return values
     n, s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
     for value in values[s]:
-        print(value, values[s])
         new_sudoku = values.copy()
         new_sudoku[s] = value
-        print(new_sudoku)
         attempt = search(new_sudoku)
         if attempt:
             return attempt
@@ -279,10 +247,10 @@ def solve(grid):
 
 
 if __name__ == '__main__':
-    diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    # diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
     # diag_sudoku_grid = '...95.7..7513.2...2.4.18536.......93.2.....1.84.......96253.1.4...2.9367..7.41...'
     # diag_sudoku_grid = '..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3..'
-    # diag_sudoku_grid = '9.1....8.8.5.7..4.2.4....6...7......5..............83.3..6......9................'
+    diag_sudoku_grid = '9.1....8.8.5.7..4.2.4....6...7......5..............83.3..6......9................'
     display(solve(diag_sudoku_grid))
 
     try:
