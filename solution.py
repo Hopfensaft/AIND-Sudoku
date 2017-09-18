@@ -15,8 +15,7 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-diagonal_units = [["A1", "B2", "C3", "D4", "E5", "F6", "G7", "H8", "I9"],
-                  ["A9", "B8", "C7", "D6", "E5", "F4", "G3", "H2", "I1"]]
+diagonal_units = [[r + c for r, c in zip(rows, cols)], [r + c for r, c in zip(rows, cols[::-1])]]
 
 
 unitlist = row_units + column_units + square_units
@@ -26,6 +25,7 @@ if DIAGONAL:
 
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s], []))-set([s])) for s in boxes)
+
 
 def assign_value(values, box, value):
     """
@@ -52,25 +52,22 @@ def naked_twins(values):
     Returns:
         the values dictionary with the naked twins eliminated from peers.
     """
-
     # Find all instances of naked twins
     dual_boxes = [box for box in values.keys() if len(values[box]) == 2]
     for dual_box in dual_boxes:
         second_dual_boxes = [second_box for second_box in dual_boxes
-                             if dual_box != second_box and values[dual_box] == values[second_box]]
+                             if dual_box != second_box and values[dual_box] == values[second_box]
+                             and second_box in peers[dual_box]]
 
         for second_dual_box in second_dual_boxes:
             boxes_to_clean = [peer_set for peer_set in unitlist
                               if (dual_box in peer_set and second_dual_box in peer_set)]
-            print(dual_box, second_dual_box, boxes_to_clean)
             for group in boxes_to_clean:
-                group.remove(dual_box)
-                group.remove(second_dual_box)
                 for box in group:
-                    if len(values[box]) >= 1:  # weed out boxes with empty values
+                    # weed out boxes with empty values or solved boxes
+                    if len(values[box]) > 1 and box != dual_box and box != second_dual_box:
                         for digit in values[dual_box]:
                             assign_value(values, box, values[box].replace(digit, ''))
-    print(unitlist)
     return values
 
 
@@ -202,33 +199,6 @@ def search(values):
             return attempt
 
 
-def init_grid(grid):
-    """
-     Setting up the sudoku dictionary at the beginning of every game. Making use of assign_value to follow steps
-     Args:
-         The sudoku game grid in string form
-     Returns:
-         resulting Sudoku in dictionary form.
-     """
-
-    values = {"A1": "", "A2": "", "A3": "", "A4": "", "A5": "", "A6": "", "A7": "", "A8": "", "A9": "",
-              "B1": "", "B2": "", "B3": "", "B4": "", "B5": "", "B6": "", "B7": "", "B8": "", "B9": "",
-              "C1": "", "C2": "", "C3": "", "C4": "", "C5": "", "C6": "", "C7": "", "C8": "", "C9": "",
-              "D1": "", "D2": "", "D3": "", "D4": "", "D5": "", "D6": "", "D7": "", "D8": "", "D9": "",
-              "E1": "", "E2": "", "E3": "", "E4": "", "E5": "", "E6": "", "E7": "", "E8": "", "E9": "",
-              "F1": "", "F2": "", "F3": "", "F4": "", "F5": "", "F6": "", "F7": "", "F8": "", "F9": "",
-              "G1": "", "G2": "", "G3": "", "G4": "", "G5": "", "G6": "", "G7": "", "G8": "", "G9": "",
-              "H1": "", "H2": "", "H3": "", "H4": "", "H5": "", "H6": "", "H7": "", "H8": "", "H9": "",
-              "I1": "", "I2": "", "I3": "", "I4": "", "I5": "", "I6": "", "I7": "", "I8": "", "I9": ""}
-
-    initialize_values = grid_values(grid)
-
-    for val in initialize_values:
-        assign_value(values, val, initialize_values[val])
-
-    return values
-
-
 def solve(grid):
     """
     Find the solution to a Sudoku grid.
@@ -240,7 +210,7 @@ def solve(grid):
         False if no solution exists.
     """
 
-    values = init_grid(grid)
+    values = grid_values(grid)
     values = search(values)
 
     return values
